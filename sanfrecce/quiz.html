@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サンフレッチェ広島 選手クイズ</title>
+    <style>
+        .quiz-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .player-image {
+            max-width: 100%;
+        }
+        .answers {
+            display: flex;
+            flex-direction: column;
+        }
+        .answer {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>選手クイズ</h1>
+        <img id="player-image" class="player-image" alt="選手画像">
+        <div id="answers" class="answers"></div>
+        <button id="next-button" onclick="nextQuestion()">次の問題へ</button>
+    </div>
+    
+    <script>
+        const players = [
+            { number: 1, position: 'GK', name: '大迫 敬介', image: 'images/1.png' },
+            { number: 4, position: 'DF', name: '荒木 隼人', image: 'images/2.png' },
+            { number: 6, position: 'MF', name: '青山 敏弘', image: 'images/6.png' },
+            //{ number: x, position: 'XX', name: 'XX XX', image: 'x.png' },
+            // 他の選手データを追加
+        ];
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+
+        function loadQuestion() {
+            const player = players[currentQuestion];
+            document.getElementById('player-image').src = player.image;
+            const answersDiv = document.getElementById('answers');
+            answersDiv.innerHTML = '';
+
+            const options = [
+                player.number,
+                player.position,
+                player.name
+            ];
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('answer');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option);
+                answersDiv.appendChild(button);
+            });
+        }
+
+        function checkAnswer(option) {
+            const player = players[currentQuestion];
+            if (option == player.number || option == player.position || option == player.name) {
+                correctAnswers++;
+            }
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= players.length) {
+                alert(`正解数: ${correctAnswers}/${players.length}`);
+                currentQuestion = 0;
+                correctAnswers = 0;
+            }
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
