@@ -3,31 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>サンフレッチェ広島 選手クイズ</title>
+    <title>サンフレッチェ広島 選手クイズ(試作)</title>
     <style>
         .quiz-container {
             max-width: 600px;
             margin: 0 auto;
             text-align: center;
         }
+        .flex-container {
+            display: flex;
+        }
         .player-image {
             max-width: 100%;
         }
         .answers {
-            display: flex;
-            flex-direction: column;
+            flex: 1;
+            text-align: left;
+            padding-left: 20px;
         }
         .answer {
             margin: 5px 0;
+        }
+        .highlight {
+            border: 2px solid red;
         }
     </style>
 </head>
 <body>
     <div class="quiz-container">
-        <h1>選手クイズ</h1>
-        <img id="player-image" class="player-image" alt="選手画像">
-        <div id="answers" class="answers"></div>
-        <button id="next-button" onclick="nextQuestion()">次の問題へ</button>
+        <h1>サンフレッチェ広島 選手クイズ(試作)</h1>
+        <div id="quiz-content" class="flex-container">
+            <img id="player-image" class="player-image" alt="選手画像">
+            <div id="answers" class="answers">
+                <div id="position-answers"></div>
+                <div id="number-answers"></div>
+                <div id="name-answers"></div>
+                <button id="next-button">次の問題へ</button>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -57,50 +70,139 @@
             { number: 51, position: 'FW', name: '加藤 陸次樹', image: 'https://www.jleague.jp/img/cache/2024/hiroshima/player/1401505_l.jpg' },
             { number: 66, position: 'MF', name: '川辺 駿', image: 'https://www.jleague.jp/img/cache/2024/hiroshima/player/1300179_l.jpg' },
             { number: 99, position: 'FW', name: 'ゴンサロ パシエンシア', image: 'https://www.jleague.jp/img/cache/2024/hiroshima/player/1649615_l.jpg' }
-            //{ number: x, position: 'XX', name: 'XX XX', image: 'x.jpg' },
-            // 他の選手データを追加
         ];
+
         let currentQuestion = 0;
         let correctAnswers = 0;
+        let order = shuffle([...players.keys()]);
+        let results = [];
 
-        function loadQuestion() {
-            const player = players[currentQuestion];
-            document.getElementById('player-image').src = player.image;
-            const answersDiv = document.getElementById('answers');
-            answersDiv.innerHTML = '';
-
-            const options = [
-                player.number,
-                player.position,
-                player.name
-            ];
-
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.classList.add('answer');
-                button.textContent = option;
-                button.onclick = () => checkAnswer(option);
-                answersDiv.appendChild(button);
-            });
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
-        function checkAnswer(option) {
-            const player = players[currentQuestion];
-            if (option == player.number || option == player.position || option == player.name) {
+        function loadQuestion() {
+            const player = players[order[currentQuestion]];
+            document.getElementById('player-image').src = player.image;
+
+            const positionAnswersDiv = document.getElementById('position-answers');
+            const numberAnswersDiv = document.getElementById('number-answers');
+            const nameAnswersDiv = document.getElementById('name-answers');
+
+            positionAnswersDiv.innerHTML = '<label>ポジション: <select id="position-select"><option value=""></option></select></label>';
+            numberAnswersDiv.innerHTML = '<label>背番号: <select id="number-select"><option value=""></option></select></label>';
+            nameAnswersDiv.innerHTML = '<label>氏名: <select id="name-select"><option value=""></option></select></label>';
+
+            const positionSelect = document.getElementById('position-select');
+            const numberSelect = document.getElementById('number-select');
+            const nameSelect = document.getElementById('name-select');
+
+            const positions = ['GK', 'DF', 'MF', 'FW'];
+            positions.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position;
+                option.textContent = position;
+                positionSelect.appendChild(option);
+            });
+
+            players.forEach(p => {
+                const numberOption = document.createElement('option');
+                numberOption.value = p.number;
+                numberOption.textContent = p.number;
+                numberSelect.appendChild(numberOption);
+
+                const nameOption = document.createElement('option');
+                nameOption.value = p.name;
+                nameOption.textContent = p.name;
+                nameSelect.appendChild(nameOption);
+            });
+
+            shuffle([...nameSelect.options].slice(1)).forEach(option => nameSelect.appendChild(option));
+        }
+
+        function checkAnswer() {
+            const player = players[order[currentQuestion]];
+
+            const selectedPosition = document.getElementById('position-select').value;
+            const selectedNumber = document.getElementById('number-select').value;
+            const selectedName = document.getElementById('name-select').value;
+
+            let allFilled = true;
+
+            if (selectedPosition === '') {
+                document.getElementById('position-select').classList.add('highlight');
+                allFilled = false;
+            } else {
+                document.getElementById('position-select').classList.remove('highlight');
+            }
+
+            if (selectedNumber === '') {
+                document.getElementById('number-select').classList.add('highlight');
+                allFilled = false;
+            } else {
+                document.getElementById('number-select').classList.remove('highlight');
+            }
+
+            if (selectedName === '') {
+                document.getElementById('name-select').classList.add('highlight');
+                allFilled = false;
+            } else {
+                document.getElementById('name-select').classList.remove('highlight');
+            }
+
+            if (!allFilled) {
+                alert('すべての選択肢を選んでください！');
+                return;
+            }
+
+            const isCorrect = selectedPosition == player.position && selectedNumber == player.number && selectedName == player.name;
+            results.push({ ...player, correct: isCorrect });
+
+            if (isCorrect) {
                 correctAnswers++;
             }
+
             nextQuestion();
+        }
+
+        function displayResults() {
+            const quizContent = document.getElementById('quiz-content');
+            quizContent.innerHTML = `<h2>結果: ${correctAnswers}/${players.length}</h2>`;
+            
+            results.forEach(result => {
+                const resultDiv = document.createElement('div');
+                resultDiv.textContent = `${result.number} - ${result.position} - ${result.name} : ${result.correct ? '正解' : '不正解'}`;
+                quizContent.appendChild(resultDiv);
+            });
+
+            const retryButton = document.createElement('button');
+            retryButton.textContent = 'もう一度挑戦する';
+            retryButton.onclick = resetQuiz;
+            quizContent.appendChild(retryButton);
         }
 
         function nextQuestion() {
             currentQuestion++;
             if (currentQuestion >= players.length) {
-                alert(`正解数: ${correctAnswers}/${players.length}`);
-                currentQuestion = 0;
-                correctAnswers = 0;
+                displayResults();
+                return;
             }
             loadQuestion();
         }
+
+        function resetQuiz() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            order = shuffle([...players.keys()]);
+            results = [];
+            loadQuestion();
+        }
+
+        document.getElementById('next-button').onclick = checkAnswer;
 
         loadQuestion();
     </script>
